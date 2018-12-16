@@ -1,0 +1,179 @@
+use super::{
+    super::tui_utils::Event, LedgerList, LedgerTab, LedgerTabState, MainTab, OrdinaryFrame, Trans,
+};
+use crate::{
+    ledger::{ExpenseKind, IncomeKind, Ledger, TransactionMetadata},
+    utils::display_currency,
+};
+use std::borrow::Cow;
+use termion::event::Key;
+use tui::{
+    backend::{Backend, TermionBackend},
+    layout::{Constraint, Direction, Layout, Rect},
+    style::{Color, Modifier, Style},
+    terminal::{Frame, Terminal},
+    widgets::{Block, Borders, Paragraph, SelectableList, Tabs, Text, Widget},
+};
+
+pub fn generate_help_text(tab: &mut LedgerTab) {
+    tab.help_text.clear();
+    tab.help_text.push(Text::raw("\n"));
+
+    match tab.state {
+        LedgerTabState::Normal => {
+            tab.help_text.push(Text::raw(
+                "   Press Esc to save and quit.\n   Press Ctrl+Q to quit without saving.\n   Press Ctrl+S to save without quitting.\n   Press Tab to switch tab.\n\n   Use the arrow keys to navigate the lists.\n   Use page up and down for SANIC SPED.\n\n",
+            ));
+            match tab.active_list {
+                LedgerList::Accounts => {
+                    tab.help_text
+                        .push(Text::raw("   Press + to add an account.\n"));
+                    if tab.ledger.accounts.len() != 0 {
+                        tab.help_text.push(Text::raw("   Press Enter to add a transaction.\n   Press - then Del to delete the selected account.\n"))
+                    }
+                    tab.help_text.push(Text::raw("\n"));
+                }
+                LedgerList::Transactions => {
+                    tab.help_text.push(Text::raw("   Press + to add an account.\n   Press Enter to add a transaction.\n   Press - then Del to delete the selected transaction.\n\n"));
+                }
+            }
+        }
+        LedgerTabState::NewAccount => {
+            tab.help_text
+                .push(Text::raw("   Press Esc to cancel the new account."));
+        }
+        _ => {}
+    }
+}
+
+pub fn generate_info_text(tab: &mut LedgerTab) {
+    tab.info_text.clear();
+
+    if tab.accounts_names.len() != 0 {
+        tab.info_text.push(Text::raw("\n"));
+        tab.info_text.push(Text::styled(
+            "   Account\n",
+            Style::default()
+                .modifier(Modifier::Bold)
+                .fg(Color::LightCyan),
+        ));
+
+        let account = tab
+            .ledger
+            .accounts
+            .get(tab.account_cursor)
+            .expect("Unreachable: account cursor out of bounds for info text");
+        tab.info_text.push(Text::raw(format!(
+            "   Account name: {}\n   Opening balance: ${}\n   Current balance: ${}\n\n\n",
+            account.name,
+            display_currency(&account.opening_balance),
+            display_currency(&account.current_balance())
+        )));
+
+        if tab.active_list == LedgerList::Transactions {
+            tab.info_text.push(Text::styled(
+                "   Transaction\n",
+                Style::default()
+                    .modifier(Modifier::Bold)
+                    .fg(Color::LightCyan),
+            ));
+
+            let txn_cursor = *tab
+                .accounts_cursors
+                .get(tab.account_cursor)
+                .expect("Unreachable: account cursor out of cursors bounds for info text");
+            let txn = account
+                .transactions
+                .get(txn_cursor)
+                .expect("Unreachable: transaction out of bounds for info text");
+            let txn_name = tab
+                .transactions_names
+                .get(tab.account_cursor)
+                .expect("Unreachable: txn_name 1")
+                .get(txn_cursor)
+                .expect("Unreachable: txn_name 2");
+            tab.info_text.push(Text::raw(format!(
+                "   {}\n   {}\n   Date: {}\n   Amount: ${}\n   Fees: ${}\n",
+                txn_name,
+                txn.description,
+                txn.date.date(),
+                display_currency(&txn.amount),
+                display_currency(&txn.fees.iter().map(|x| &x.amount).sum())
+            )));
+
+            if let TransactionMetadata::Income {
+                kind: IncomeKind::Donation(ref uuid),
+                ..
+            } = &txn.meta
+            {
+                tab.info_text
+                    .push(Text::raw(format!("   Donation ID: {}\n", hex::encode(uuid))));
+            }
+        }
+    }
+}
+
+pub fn generate_transaction_names(ledger: &Ledger) -> Vec<Vec<String>> {
+    ledger
+        .accounts
+        .iter()
+        .map(|x| {
+            x.transactions
+                .iter()
+                .map(|x| match x.meta {
+                    TransactionMetadata::Income {
+                        kind: IncomeKind::Donation(_),
+                        ref from,
+                        ..
+                    } => format!("Donation from {} (${})", from, display_currency(&x.amount)),
+                    TransactionMetadata::Income {
+                        kind: IncomeKind::General,
+                        ref from,
+                        ..
+                    } => format!("Income from {} (${})", from, display_currency(&x.amount)),
+                    TransactionMetadata::Expense {
+                        kind: ExpenseKind::General,
+                        ref towards,
+                        ref requester,
+                    } => format!(
+                        "Expense requested by {} paid to {} (${})",
+                        requester,
+                        towards,
+                        display_currency(&x.amount)
+                    ),
+                })
+                .collect()
+        })
+        .collect()
+}
+
+pub fn generate_input_fields_text(ledger: &mut LedgerTab, fields: &[&str], next: &'static str) {
+    ledger.rendered_fields.clear();
+    ledger.rendered_fields.push(Text::raw("\n"));
+
+    use crate::utils::GetOrDefault;
+
+    for (i, v) in fields.iter().enumerate() {
+        if i == ledger.selected_field {
+            ledger.rendered_fields.push(Text::styled(
+                format!("   {}: {}\n", v, ledger.text_input_fields.get_or_default(i)),
+                Style::default().fg(Color::Yellow),
+            ));
+        } else {
+            ledger.rendered_fields.push(Text::raw(format!(
+                "   {}: {}\n",
+                v,
+                ledger.text_input_fields.get_or_default(i)
+            )));
+        }
+    }
+
+    ledger.rendered_fields.push(Text::raw("\n   "));
+    if ledger.selected_field == fields.len() {
+        ledger
+            .rendered_fields
+            .push(Text::styled(next, Style::default().fg(Color::Yellow)));
+    } else {
+        ledger.rendered_fields.push(Text::raw(next));
+    }
+}
