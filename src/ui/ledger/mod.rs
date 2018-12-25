@@ -1,18 +1,11 @@
 use super::{tui_utils::Event, MainTab, OrdinaryFrame, Trans};
-use crate::{
-    ledger::{ExpenseKind, IncomeKind, Ledger, TransactionMetadata},
-    utils::display_currency,
-};
+use crate::ledger::Ledger;
 use num_derive::FromPrimitive;
-use num::traits::FromPrimitive;
-use std::borrow::Cow;
 use termion::event::Key;
 use tui::{
-    backend::{Backend, TermionBackend},
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
-    terminal::{Frame, Terminal},
-    widgets::{Block, Borders, Paragraph, SelectableList, Tabs, Text, Widget},
+    widgets::{Block, Borders, Paragraph, SelectableList, Text, Widget},
 };
 
 mod delete;
@@ -68,7 +61,8 @@ impl<'a> LedgerTab<'a> {
             crate::ledger::new(ledger_path.clone());
             Ledger::default()
         } else {
-            Ledger::load(ledger_path.clone()).unwrap_or_else(|e| panic!("Failed to load ledger!\n{}", e))
+            Ledger::load(ledger_path.clone())
+                .unwrap_or_else(|e| panic!("Failed to load ledger!\n{}", e))
         };
 
         let mut new = LedgerTab {
@@ -141,7 +135,7 @@ impl<'a> MainTab for LedgerTab<'a> {
             .render(f, top_left_chunks[0]);
         } else {
             Paragraph::new(self.help_text.iter())
-                .block(Block::default().borders(Borders::ALL)) //.title("Help"))
+                .block(Block::default().borders(Borders::ALL))
                 .wrap(true)
                 .render(f, top_left_chunks[0]);
 
@@ -154,7 +148,11 @@ impl<'a> MainTab for LedgerTab<'a> {
                 }
                 LedgerTabState::NewTransaction(_, _) => {
                     Paragraph::new(self.rendered_fields.iter())
-                        .block(Block::default().borders(Borders::ALL).title("New transaction"))
+                        .block(
+                            Block::default()
+                                .borders(Borders::ALL)
+                                .title("New transaction"),
+                        )
                         .wrap(true)
                         .render(f, chunks[1]);
                 }
@@ -197,16 +195,12 @@ impl<'a> MainTab for LedgerTab<'a> {
                         .highlight_style(Style::default().fg(if self.active_list == LedgerList::Transactions { Color::Yellow } else { Color::Rgb(220, 140, 0) }))
                         .render(f, chunks[1]);
                 } else {
-                    Paragraph::new([].iter())
-                        //.block(Block::default().borders(Borders::ALL))
-                        .render(f, chunks[1])
+                    Paragraph::new([].iter()).render(f, chunks[1])
                 }
             }
 
             Paragraph::new(self.info_text.iter())
-                .block(
-                    Block::default().borders(Borders::ALL), //.title("Information")
-                )
+                .block(Block::default().borders(Borders::ALL))
                 .wrap(true)
                 .render(f, left_chunks[1]);
         }

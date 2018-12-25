@@ -2,7 +2,6 @@ use serde_derive::{Serialize, Deserialize};
 use chrono::{DateTime, Utc};
 use num::BigRational;
 
-use std::cmp::Ordering;
 use std::error::Error;
 use std::path::Path;
 use std::fs;

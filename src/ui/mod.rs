@@ -1,18 +1,14 @@
-use crate::ledger::Ledger;
 use std::error::Error;
 use std::io;
 use termion::{event::Key, input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
 use tui::{
-    backend::{Backend, TermionBackend},
-    layout::{Constraint, Direction, Layout, Rect},
+    backend::TermionBackend,
+    layout::{Constraint, Layout, Rect},
     style::{Color, Style},
     terminal::{Frame, Terminal},
     widgets::{Block, Borders, Tabs, Widget},
 };
 
-pub const DATE_FORMAT: &'static str = "%Y/%m/%d %H:%M";
-
-mod budget;
 mod ledger;
 mod tui_utils;
 
@@ -67,7 +63,18 @@ pub fn start_handle_panic(ledger: Option<std::path::PathBuf>) -> Result<(), Box<
 }
 
 pub fn start(ledger: Option<std::path::PathBuf>) -> Result<(), Box<dyn Error>> {
-    // <>
+    let mut tabs: Vec<Box<dyn MainTab>> = Vec::new();
+
+    if let Some(ledger) = ledger {
+        tabs.push(Box::new(self::ledger::LedgerTab::new(ledger)));
+    }
+
+    if tabs.len() == 0 {
+        println!("No UI can be rendered without more information.");
+        println!("You can try passing a ledger file with the `-l` flag to get started.");
+        return Ok(());
+    }
+
     let stdout = io::stdout().into_raw_mode()?;
     let stdout = MouseTerminal::from(stdout);
     let stdout = AlternateScreen::from(stdout);
@@ -76,12 +83,6 @@ pub fn start(ledger: Option<std::path::PathBuf>) -> Result<(), Box<dyn Error>> {
     terminal.hide_cursor()?;
 
     let events = Events::new();
-
-    let mut tabs: Vec<Box<dyn MainTab>> = Vec::new();
-
-    if let Some(ledger) = ledger {
-        tabs.push(Box::new(self::ledger::LedgerTab::new(ledger)));
-    }
 
     let mut app = App::new(tabs);
 

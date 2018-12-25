@@ -191,7 +191,10 @@ pub fn event(tab: &mut LedgerTab, event: Event<Key>) -> Trans {
                                             tab.text_input_fields.clear();
                                             tab.selected_field = 0;
                                             tab.state = LedgerTabState::Normal;
-                                            tab.transactions_names = super::text::generate_transaction_names(&tab.ledger);
+                                            tab.transactions_names =
+                                                super::text::generate_transaction_names(
+                                                    &tab.ledger,
+                                                );
                                             generate_info_text(tab);
                                             generate_help_text(tab);
                                         }

@@ -2,22 +2,10 @@ use super::{
     super::tui_utils::Event,
     text::{generate_help_text, generate_info_text, generate_input_fields_text},
     utils::{decrease_modular, increase_modular},
-    LedgerList, LedgerTab, LedgerTabState, MainTab, OrdinaryFrame, Trans,
+    LedgerList, LedgerTab, LedgerTabState, Trans,
 };
 use crate::utils::GetOrDefault;
-use crate::{
-    ledger::{ExpenseKind, IncomeKind, Ledger, TransactionMetadata},
-    utils::display_currency,
-};
-use std::borrow::Cow;
 use termion::event::Key;
-use tui::{
-    backend::{Backend, TermionBackend},
-    layout::{Constraint, Direction, Layout, Rect},
-    style::{Color, Modifier, Style},
-    terminal::{Frame, Terminal},
-    widgets::{Block, Borders, Paragraph, SelectableList, Tabs, Text, Widget},
-};
 
 pub fn event(tab: &mut LedgerTab, event: Event<Key>) -> Trans {
     match event {
@@ -168,47 +156,6 @@ pub fn event(tab: &mut LedgerTab, event: Event<Key>) -> Trans {
             }
             Trans::None
         }
-        Event::Input(Key::Char('n')) => {
-            let name = format!(
-                "{}a",
-                tab.ledger
-                    .accounts
-                    .last()
-                    .map(|x| &x.name)
-                    .unwrap_or(&"".to_owned())
-            );
-            tab.ledger
-                .new_account(&name, num::BigRational::from_integer(num::BigInt::from(0)), chrono::Utc::now());
-            tab.accounts_cursors.push(0);
-            tab.transactions_names.push(Vec::new());
-            tab.accounts_names.push(name);
-            generate_info_text(tab);
-            Trans::None
-        }
-        Event::Input(Key::Char('t')) => {
-            let txn = crate::ledger::Transaction {
-                date: chrono::Utc::now(),
-                description: "Acquire the best mobile office".to_owned(),
-                amount: num::BigRational::from_integer(num::BigInt::from(10000001))
-                    / num::BigRational::from_integer(num::BigInt::from(3)),
-                fees: Vec::new(),
-                meta: TransactionMetadata::Expense {
-                    kind: ExpenseKind::General,
-                    towards: "HighestQualityYachtsInc".to_owned(),
-                    requester: "Moxinilian".to_owned(),
-                },
-            };
-            tab.ledger
-                .accounts
-                .get_mut(tab.account_cursor)
-                .unwrap()
-                .transactions
-                .push(txn);
-            tab.transactions_names = super::text::generate_transaction_names(&tab.ledger);
-            generate_info_text(tab);
-            Trans::None
-        }
-
         _ => Trans::None,
     }
 }

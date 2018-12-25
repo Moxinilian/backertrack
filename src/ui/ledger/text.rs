@@ -1,18 +1,11 @@
-use super::{
-    super::tui_utils::Event, LedgerList, LedgerTab, LedgerTabState, MainTab, OrdinaryFrame, Trans,
-};
+use super::{LedgerList, LedgerTab, LedgerTabState};
 use crate::{
     ledger::{ExpenseKind, IncomeKind, Ledger, TransactionMetadata},
     utils::display_currency,
 };
-use std::borrow::Cow;
-use termion::event::Key;
 use tui::{
-    backend::{Backend, TermionBackend},
-    layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
-    terminal::{Frame, Terminal},
-    widgets::{Block, Borders, Paragraph, SelectableList, Tabs, Text, Widget},
+    widgets::Text,
 };
 
 pub fn generate_help_text(tab: &mut LedgerTab) {
@@ -106,8 +99,10 @@ pub fn generate_info_text(tab: &mut LedgerTab) {
                 ..
             } = &txn.meta
             {
-                tab.info_text
-                    .push(Text::raw(format!("   Donation ID: {}\n", hex::encode(uuid))));
+                tab.info_text.push(Text::raw(format!(
+                    "   Donation ID: {}\n",
+                    hex::encode(uuid)
+                )));
             }
         }
     }

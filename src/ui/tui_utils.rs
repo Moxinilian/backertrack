@@ -47,8 +47,6 @@ pub enum Event<I> {
 /// type is handled in its own thread and returned to a common `Receiver`
 pub struct Events {
     rx: mpsc::Receiver<Event<Key>>,
-    input_handle: thread::JoinHandle<()>,
-    tick_handle: thread::JoinHandle<()>,
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -73,45 +71,36 @@ impl Events {
 
     pub fn with_config(config: Config) -> Events {
         let (tx, rx) = mpsc::channel();
-        let input_handle = {
-            let tx = tx.clone();
-            thread::spawn(move || {
-                let stdin = io::stdin();
-                for evt in stdin.keys() {
-                    match evt {
-                        Ok(key) => {
-                            if let Err(_) = tx.send(Event::Input(key)) {
-                                return;
-                            }
-                            if key == config.exit_key {
-                                return;
-                            }
+        let tx1 = tx.clone();
+        thread::spawn(move || {
+            let stdin = io::stdin();
+            for evt in stdin.keys() {
+                match evt {
+                    Ok(key) => {
+                        if let Err(_) = tx1.send(Event::Input(key)) {
+                            return;
                         }
-                        Err(_) => {}
+                        if key == config.exit_key {
+                            return;
+                        }
                     }
+                    Err(_) => {}
                 }
-            })
-        };
-        let tick_handle = {
-            let tx = tx.clone();
-            thread::spawn(move || {
-                let tx = tx.clone();
-                loop {
-                    if let Ok(_) = tx.send(Event::Tick) {
-                        thread::sleep(config.tick_rate);
-                    } else {
-                        break;
-                    }
-                    //tx.send(Event::Tick).unwrap();
-                    //thread::sleep(config.tick_rate);
+            }
+        });
+        let tx2 = tx.clone();
+        thread::spawn(move || {
+            loop {
+                if let Ok(_) = tx2.send(Event::Tick) {
+                    thread::sleep(config.tick_rate);
+                } else {
+                    break;
                 }
-            })
-        };
-        Events {
-            rx,
-            input_handle,
-            tick_handle,
-        }
+                //tx.send(Event::Tick).unwrap();
+                //thread::sleep(config.tick_rate);
+            }
+        });
+        Events { rx }
     }
 
     pub fn next(&self) -> Result<Event<Key>, mpsc::RecvError> {

@@ -16,7 +16,7 @@ struct ExportRow<'a> {
 }
 
 pub fn export(ledger: PathBuf, to: PathBuf) {
-    let mut ledger = Ledger::load(&ledger).expect("Could not read the ledger file");
+    let ledger = Ledger::load(&ledger).expect("Could not read the ledger file");
     let mut writer = csv::Writer::from_path(to).expect("Could not open the target file");
 
     for account in ledger.accounts {

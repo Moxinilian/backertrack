@@ -1,5 +1,4 @@
 use super::structure::{Account, Ledger, TransactionMetadata};
-use std::error::Error;
 use std::path::PathBuf;
 use chrono::{DateTime, Utc};
 
@@ -25,11 +24,11 @@ impl Ledger {
         self.accounts.iter().position(|x| x.name == name).and_then(move |x| self.accounts.get_mut(x))
     }
 
-    pub fn remove_account(&mut self, name: &str) {
+    /*pub fn remove_account(&mut self, name: &str) {
         if let Some(index) = self.accounts.iter().position(|x| x.name == name) {
             self.remove_account_at(index);
         }
-    }
+    }*/
 
     pub fn remove_account_at(&mut self, position: usize) {
         self.accounts.remove(position);

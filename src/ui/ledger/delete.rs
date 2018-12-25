@@ -1,22 +1,9 @@
 use super::{
     super::tui_utils::Event,
-    text::{generate_help_text, generate_info_text, generate_input_fields_text},
-    utils::{decrease_modular, increase_modular},
-    LedgerList, LedgerTab, LedgerTabState, MainTab, OrdinaryFrame, Trans,
+    text::{generate_help_text, generate_info_text},
+    LedgerList, LedgerTab, LedgerTabState, Trans,
 };
-use crate::{
-    ledger::{ExpenseKind, IncomeKind, Ledger, TransactionMetadata},
-    utils::display_currency,
-};
-use std::borrow::Cow;
 use termion::event::Key;
-use tui::{
-    backend::{Backend, TermionBackend},
-    layout::{Constraint, Direction, Layout, Rect},
-    style::{Color, Modifier, Style},
-    terminal::{Frame, Terminal},
-    widgets::{Block, Borders, Paragraph, SelectableList, Tabs, Text, Widget},
-};
 
 pub fn event(tab: &mut LedgerTab, event: Event<Key>) -> Trans {
     if event == Event::Input(Key::Delete) {
