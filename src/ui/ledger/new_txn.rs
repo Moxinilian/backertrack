@@ -81,7 +81,7 @@ pub fn event(tab: &mut LedgerTab, event: Event<Key>) -> Trans {
                 }
                 Event::Input(Key::Left) => {
                     let mut selected_int = *selected as usize;
-                    decrease_modular(&mut selected_int, 1, 3);
+                    decrease_modular(&mut selected_int, 1, FIELDS_KIND.len() + 1);
                     *selected = NewTransactionKind::from_usize(selected_int)
                         .expect("Unreachable: from_usize left");
                     *tab.text_input_fields.get_mut_or_default(0) = selected.get_name().to_owned();
@@ -89,7 +89,7 @@ pub fn event(tab: &mut LedgerTab, event: Event<Key>) -> Trans {
                 }
                 Event::Input(Key::Right) => {
                     let mut selected_int = *selected as usize;
-                    increase_modular(&mut selected_int, 1, 3);
+                    increase_modular(&mut selected_int, 1, FIELDS_KIND.len() + 1);
                     *selected = NewTransactionKind::from_usize(selected_int)
                         .expect("Unreachable: from_usize right");
                     *tab.text_input_fields.get_mut_or_default(0) = selected.get_name().to_owned();
