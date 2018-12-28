@@ -101,7 +101,7 @@ pub fn export(ledger: PathBuf, to: PathBuf) {
 fn format_fees(fees: &Vec<Fee>) -> String {
     let mut res = String::new();
     for f in fees {
-        res.push_str(&format!("${}[{}];", &f.amount.to_string(), f.towards));
+        res.push_str(&format!("{}[{}];", &f.amount.to_string(), f.towards));
     }
     res.pop();
     res
