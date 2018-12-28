@@ -3,6 +3,7 @@ pub use self::structure::*;
 
 pub mod accounts;
 pub mod donations;
+pub mod payout;
 
 mod export;
 pub use self::export::export;

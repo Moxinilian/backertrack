@@ -54,6 +54,27 @@ fn main() -> Result<(), Box<std::error::Error>> {
                 ),
         )
         .subcommand(
+            SubCommand::with_name("payout")
+                .about("Import new payouts to Chase into the ledger")
+                .setting(AppSettings::ArgRequiredElseHelp)
+                .arg(
+                    Arg::with_name("LEDGER")
+                        .required(true)
+                        .help("Path to the ledger file"),
+                )
+                .arg(
+                    Arg::with_name("FILE")
+                        .required(true)
+                        .help("Path to the file to import data from"),
+                )
+                .arg(
+                    Arg::with_name("PLATFORM")
+                        .required(true)
+                        .help("Origin platform of the payout")
+                        .possible_values(&["stripe", "paypal"]),
+                ),
+        )
+        .subcommand(
             SubCommand::with_name("donations")
                 .about("Manage donations")
                 .setting(AppSettings::ArgRequiredElseHelp)
@@ -72,9 +93,9 @@ fn main() -> Result<(), Box<std::error::Error>> {
                                 .help("Path to the file to import data from"),
                         )
                         .arg(
-                            Arg::with_name("FORMAT")
+                            Arg::with_name("PLATFORM")
                                 .required(true)
-                                .help("Format of the imported data")
+                                .help("Platform the imported data is from")
                                 .possible_values(&["donorbox", "opencollective"]),
                         ),
                 ),
@@ -97,7 +118,11 @@ fn main() -> Result<(), Box<std::error::Error>> {
                                 .required(true)
                                 .help("Name of the new account"),
                         )
-                        .arg(Arg::with_name("DATE").required(true).help("Date the account was opened (YYYY/MM/DD HH:MM)"))
+                        .arg(
+                            Arg::with_name("DATE")
+                                .required(true)
+                                .help("Date the account was opened (YYYY/MM/DD HH:MM)"),
+                        )
                         .arg(
                             Arg::with_name("balance")
                                 .long("balance")
@@ -148,7 +173,7 @@ fn main() -> Result<(), Box<std::error::Error>> {
                 ledger::donations::import(
                     path_exists_or_panic(import_match.value_of("LEDGER").unwrap()),
                     path_exists_or_panic(import_match.value_of("FILE").unwrap()),
-                    import_match.value_of("FORMAT").unwrap().into(),
+                    import_match.value_of("PLATFORM").unwrap().into(),
                 );
             }
         } else if let Some(accounts_match) = ledger_match.subcommand_matches("accounts") {
@@ -173,6 +198,12 @@ fn main() -> Result<(), Box<std::error::Error>> {
             ledger::export(
                 PathBuf::from(export_match.value_of("LEDGER").unwrap()),
                 PathBuf::from(export_match.value_of("OUTPUT").unwrap()),
+            );
+        } else if let Some(payout_match) = ledger_match.subcommand_matches("payout") {
+            ledger::payout::payout(
+                path_exists_or_panic(payout_match.value_of("LEDGER").unwrap()),
+                path_exists_or_panic(payout_match.value_of("FILE").unwrap()),
+                payout_match.value_of("PLATFORM").unwrap().into(),
             );
         }
     } else {
