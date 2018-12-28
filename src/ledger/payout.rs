@@ -29,6 +29,7 @@ pub fn payout(ledger_path: PathBuf, data: PathBuf, origin: PayoutOrigin) {
         PayoutOrigin::Unknown => println!("Unknown origin"),
     }
 
+    ledger.sort_by_date();
     ledger
         .save(&ledger_path)
         .expect("Could not save the ledger");

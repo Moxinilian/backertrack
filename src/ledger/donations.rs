@@ -29,6 +29,7 @@ pub fn import(ledger_path: PathBuf, data: PathBuf, origin: DonationOrigin) {
         DonationOrigin::Unknown => println!("Unknown origin"),
     }
 
+    ledger.sort_by_date();
     ledger
         .save(&ledger_path)
         .expect("Could not save the ledger");

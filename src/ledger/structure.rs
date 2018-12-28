@@ -74,4 +74,10 @@ impl Ledger {
         serde_json::to_writer(file, self)?;
         Ok(())
     }
+
+    pub fn sort_by_date(&mut self) {
+        for account in &mut self.accounts {
+            account.sort_by_date();
+        }
+    }
 }

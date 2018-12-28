@@ -86,7 +86,7 @@ pub fn generate_info_text(tab: &mut LedgerTab) {
                 .get(txn_cursor)
                 .expect("Unreachable: txn_name 2");
             tab.info_text.push(Text::raw(format!(
-                "   {}\n   {}\n   Date: {}\n   Amount: ${}\n   Fees: ${}\n",
+                "   {}\n   {}\n   Date: {}\n   Gross amount: ${}\n   Fees: ${}\n",
                 txn_name,
                 txn.description,
                 txn.date.date(),

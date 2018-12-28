@@ -62,6 +62,10 @@ impl Account {
 
         res
     }
+
+    pub fn sort_by_date(&mut self) {
+        self.transactions.sort_by(|x, y| x.date.cmp(&y.date));
+    }
 }
 
 pub fn new(ledger_path: PathBuf, name: &str, opening_balance: BigRational, opening_date: DateTime<Utc>) {
