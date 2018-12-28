@@ -42,13 +42,13 @@ struct OpenCollectiveRow {
     #[serde(rename = "Transaction Date")]
     date: String,
     #[serde(rename = "Transaction Amount")]
-    amount: f64,
+    amount: String,
     #[serde(rename = "Host Fee (USD)")]
-    host_fee: f64,
+    host_fee: String,
     #[serde(rename = "Open Collective Fee (USD)")]
-    oc_fee: f64,
+    oc_fee: String,
     #[serde(rename = "Payment Processor Fee (USD)")]
-    processor_fee: f64,
+    processor_fee: String,
     #[serde(rename = "Net Amount (USD)")]
     net_amount: String,
 }
@@ -79,17 +79,22 @@ fn import_opencollective(ledger: &mut Ledger, data: &PathBuf) {
     for (i, x) in records.enumerate() {
         let x: OpenCollectiveRow =
             x.unwrap_or_else(|e| panic!("Could not deserialize entry on entry {}!\n{}", i, e));
-        let amount = num::BigRational::from_float(x.amount)
-            .unwrap_or_else(|| panic!("Could not parse transaction amount on entry {}!", i));
-        let host_fee = num::BigRational::from_float(x.host_fee)
-            .unwrap_or_else(|| panic!("Could not parse host fee on entry {}!", i));
-        let oc_fee = num::BigRational::from_float(x.oc_fee)
-            .unwrap_or_else(|| panic!("Could not parse OpenCollective fee on entry {}!", i));
-        let processor_fee = num::BigRational::from_float(x.processor_fee)
-            .unwrap_or_else(|| panic!("Could not parse processor fee fee on entry {}!", i));
+        let mut amount = currency::Currency::from_str(&x.amount)
+            .unwrap_or_else(|e| panic!("Could not parse transaction amount on entry {}!\n{}", i, e));
+        let mut host_fee = currency::Currency::from_str(&x.host_fee)
+            .unwrap_or_else(|e| panic!("Could not parse host fee on entry {}!\n{}", i, e));
+        let mut oc_fee = currency::Currency::from_str(&x.oc_fee)
+            .unwrap_or_else(|e| panic!("Could not parse OpenCollective fee on entry {}!\n{}", i, e));
+        let mut processor_fee = currency::Currency::from_str(&x.processor_fee)
+            .unwrap_or_else(|e| panic!("Could not parse processor fee fee on entry {}!\n{}", i, e));
         let date = chrono::Utc
             .datetime_from_str(&x.date, "%Y-%m-%d %H:%M:%S")
             .unwrap_or_else(|e| panic!("Could not parse transaction date on entry {}!\n{}", i, e));
+
+        amount.set_symbol('$');
+        host_fee.set_symbol('$');
+        oc_fee.set_symbol('$');
+        processor_fee.set_symbol('$');
 
         let mut hasher = crypto::sha2::Sha256::new();
         hasher.input_str("OpenCollective");
@@ -151,11 +156,9 @@ struct DonorBoxRow {
     #[serde(rename = "Name")]
     name: String,
     #[serde(rename = "Amount")]
-    amount: f64,
+    amount: String,
     #[serde(rename = "Processing Fee")]
-    fee: f64,
-    #[serde(rename = "Net Amount")]
-    net_amount: String,
+    fee: String,
     #[serde(rename = "Receipt Id")]
     receipt: String,
     #[serde(rename = "Donation Type")]
@@ -194,19 +197,22 @@ fn import_donorbox(ledger: &mut Ledger, data: &PathBuf) {
     for (i, x) in records.enumerate() {
         let x: DonorBoxRow =
             x.unwrap_or_else(|e| panic!("Could not deserialize entry on entry {}!\n{}", i, e));
-        let amount = num::BigRational::from_float(x.amount)
-            .unwrap_or_else(|| panic!("Could not parse transaction amount on entry {}!", i));
-        let fee = num::BigRational::from_float(x.fee)
-            .unwrap_or_else(|| panic!("Could not parse host fee on entry {}!", i));
+        let mut amount = currency::Currency::from_str(&x.amount)
+            .unwrap_or_else(|e| panic!("Could not parse transaction amount on entry {}!\n{}", i, e));
+        let mut fee = currency::Currency::from_str(&x.fee)
+            .unwrap_or_else(|e| panic!("Could not parse fee on entry {}!\n{}", i, e));
         let date = chrono::Utc
             .datetime_from_str(&x.date.trim_end_matches(" UTC"), "%Y-%m-%d %H:%M:%S")
             .unwrap_or_else(|e| panic!("Could not parse transaction date on entry {}!\n{}", i, e));
+
+        amount.set_symbol('$');
+        fee.set_symbol('$');
 
         let mut hasher = crypto::sha2::Sha256::new();
         hasher.input_str("DonorBox");
         hasher.input_str(&x.name);
         hasher.input_str(&x.date);
-        hasher.input_str(&x.net_amount);
+        hasher.input_str(&x.amount);
         hasher.input_str(&x.receipt);
 
         let mut hash = vec![0; 32];

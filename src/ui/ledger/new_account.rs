@@ -32,33 +32,32 @@ pub fn event(tab: &mut LedgerTab, event: Event<Key>) -> Trans {
                         .expect("Unreachable: new_account field1"),
                     crate::DATE_FORMAT,
                 ) {
-                    if let Ok(amount) = tab
+                    if let Ok(mut amount) = currency::Currency::from_str(&tab
                         .text_input_fields
                         .get(2)
-                        .expect("Unreachable: new_account field2")
-                        .parse::<f64>()
+                        .expect("Unreachable: new_account field2"))
                     {
-                        if let Some(amount) = num::BigRational::from_float(amount) {
-                            let name = tab
-                                .text_input_fields
-                                .get(0)
-                                .expect("Unreachable: new_account field0");
-                            if name.trim() != ""
-                                && !tab.ledger.accounts.iter().any(|x| x.name == *name)
-                            {
-                                tab.ledger.new_account(name, amount, date);
-                                tab.accounts_cursors.push(0);
-                                tab.transactions_names.push(Vec::new());
-                                tab.accounts_names.push(name.clone());
-                                tab.text_input_fields.clear();
-                                tab.selected_field = 0;
-                                tab.state = LedgerTabState::Normal;
-                                generate_info_text(tab);
-                                generate_help_text(tab);
-                            }
+                        amount.set_symbol('$');
+                        let name = tab
+                            .text_input_fields
+                            .get(0)
+                            .expect("Unreachable: new_account field0");
+                        if name.trim() != ""
+                            && !tab.ledger.accounts.iter().any(|x| x.name == *name)
+                        {
+                            tab.ledger.new_account(name, amount, date);
+                            tab.accounts_cursors.push(0);
+                            tab.transactions_names.push(Vec::new());
+                            tab.accounts_names.push(name.clone());
+                            tab.text_input_fields.clear();
+                            tab.selected_field = 0;
+                            tab.state = LedgerTabState::Normal;
+                            generate_info_text(tab);
+                            generate_help_text(tab);
                         }
                     }
                 }
+                
             }
         }
         Event::Input(Key::Char(x)) => {

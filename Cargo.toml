@@ -19,6 +19,7 @@ regex = "1.1.0"
 hex = "0.3.2"
 csv = "1.0.5"
 rust-crypto = "0.2.36"
+currency = { git = "https://github.com/Moxinilian/currency-rs", branch = "temporary-usage" }
 
 [target.'cfg(unix)'.dependencies]
 tui = "0.3.0"

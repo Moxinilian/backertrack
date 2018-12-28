@@ -183,9 +183,9 @@ fn main() -> Result<(), Box<std::error::Error>> {
                     new_match.value_of("NAME").unwrap(),
                     new_match
                         .value_of("balance")
-                        .map(std::str::FromStr::from_str)
+                        .map(currency::Currency::from_str)
                         .and_then(Result::ok)
-                        .unwrap_or_else(|| BigRational::from_integer(BigInt::from(0))),
+                        .unwrap_or_else(|| currency::Currency::from(0, '$')),
                     new_match
                         .value_of("DATE")
                         .and_then(|x| Utc.datetime_from_str(x, DATE_FORMAT).ok())

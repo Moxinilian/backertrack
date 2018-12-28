@@ -1,7 +1,6 @@
 use super::{ExpenseKind, IncomeKind, Ledger, TransactionMetadata, Fee};
 use serde_derive::Serialize;
 use std::path::PathBuf;
-use crate::utils::display_currency;
 
 #[derive(Serialize)]
 struct ExportRow<'a> {
@@ -23,7 +22,7 @@ pub fn export(ledger: PathBuf, to: PathBuf) {
         writer.serialize(ExportRow {
             account: &account.name,
             kind: "Opening",
-            amount: &format!("${}", display_currency(&-account.opening_balance)),
+            amount: &(-account.opening_balance).to_string(),
             date: &account.opening_date.to_rfc3339(),
             fees: "",
             description: "",
@@ -40,7 +39,7 @@ pub fn export(ledger: PathBuf, to: PathBuf) {
                     writer.serialize(ExportRow {
                         account: &account.name,
                         kind: "Expense",
-                        amount: &format!("${}", display_currency(&transaction.amount)),
+                        amount: &transaction.amount.to_string(),
                         date: &transaction.date.to_rfc3339(),
                         fees: &format_fees(&transaction.fees),
                         description: &transaction.description,
@@ -56,7 +55,7 @@ pub fn export(ledger: PathBuf, to: PathBuf) {
                     writer.serialize(ExportRow {
                         account: &account.name,
                         kind: "Payout",
-                        amount: &format!("${}", display_currency(&transaction.amount)),
+                        amount: &transaction.amount.to_string(),
                         date: &transaction.date.to_rfc3339(),
                         fees: &format_fees(&transaction.fees),
                         description: &transaction.description,
@@ -71,7 +70,7 @@ pub fn export(ledger: PathBuf, to: PathBuf) {
                     writer.serialize(ExportRow {
                         account: &account.name,
                         kind: "Income",
-                        amount: &format!("${}", display_currency(&-transaction.amount)),
+                        amount: &(-transaction.amount).to_string(),
                         date: &transaction.date.to_rfc3339(),
                         fees: &format_fees(&transaction.fees),
                         description: &transaction.description,
@@ -86,7 +85,7 @@ pub fn export(ledger: PathBuf, to: PathBuf) {
                     writer.serialize(ExportRow {
                         account: &account.name,
                         kind: "Donation",
-                        amount: &format!("${}", display_currency(&-transaction.amount)),
+                        amount: &(-transaction.amount).to_string(),
                         date: &transaction.date.to_rfc3339(),
                         fees: &format_fees(&transaction.fees),
                         description: &transaction.description,
@@ -102,7 +101,7 @@ pub fn export(ledger: PathBuf, to: PathBuf) {
 fn format_fees(fees: &Vec<Fee>) -> String {
     let mut res = String::new();
     for f in fees {
-        res.push_str(&format!("${}[{}];", display_currency(&f.amount), f.towards));
+        res.push_str(&format!("${}[{}];", &f.amount.to_string(), f.towards));
     }
     res.pop();
     res

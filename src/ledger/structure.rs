@@ -1,6 +1,7 @@
 use serde_derive::{Serialize, Deserialize};
 use chrono::{DateTime, Utc};
 use num::BigRational;
+use currency::Currency;
 
 use std::error::Error;
 use std::path::Path;
@@ -12,7 +13,7 @@ pub type PayoutID = Vec<u8>;
 #[derive(Serialize, Deserialize)]
 pub struct Fee {
     pub towards: String,
-    pub amount: BigRational,
+    pub amount: Currency,
 }
 
 #[derive(Serialize, Deserialize, PartialEq, Eq)]
@@ -44,7 +45,7 @@ pub enum TransactionMetadata {
 pub struct Transaction {
     pub date: DateTime<Utc>,
     pub description: String,
-    pub amount: BigRational,
+    pub amount: Currency,
     pub meta: TransactionMetadata,
     pub fees: Vec<Fee>,
 }
@@ -53,7 +54,7 @@ pub struct Transaction {
 pub struct Account {
     pub name: String,
     pub opening_date: DateTime<Utc>,
-    pub opening_balance: BigRational,
+    pub opening_balance: Currency,
     pub transactions: Vec<Transaction>,
 }
 

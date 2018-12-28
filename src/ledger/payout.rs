@@ -39,7 +39,7 @@ pub fn payout(ledger_path: PathBuf, data: PathBuf, origin: PayoutOrigin) {
 struct StripeRow {
     id: String,
     #[serde(rename = "Amount")]
-    amount: f64,
+    amount: String,
     #[serde(rename = "Created (UTC)")]
     date: String,
 }
@@ -71,8 +71,8 @@ fn payout_stripe(ledger: &mut Ledger, data: &PathBuf) {
     for (i, x) in records.enumerate() {
         let x: StripeRow =
             x.unwrap_or_else(|e| panic!("Could not deserialize entry on entry {}!\n{}", i, e));
-        let amount = num::BigRational::from_float(x.amount)
-            .unwrap_or_else(|| panic!("Could not parse payout amount on entry {}!", i));
+        let mut amount = currency::Currency::from_str(&x.amount)
+            .unwrap_or_else(|e| panic!("Could not parse payout amount on entry {}!\n{}", i, e));
         let date = chrono::Utc
             .datetime_from_str(&x.date, "%Y-%m-%d %H:%M")
             .unwrap_or_else(|e| {
@@ -81,6 +81,8 @@ fn payout_stripe(ledger: &mut Ledger, data: &PathBuf) {
                     &x.date, i, e
                 )
             });
+
+        amount.set_symbol('$');
 
         let mut hasher = crypto::sha2::Sha256::new();
         hasher.input_str("Stripe");
@@ -138,7 +140,7 @@ struct PayPalRow {
     #[serde(rename = "Transaction ID")]
     id: String,
     #[serde(rename = "Gross")]
-    amount: f64,
+    amount: String,
     #[serde(rename = "Date")]
     date: String,
 }
@@ -170,8 +172,8 @@ fn payout_paypal(ledger: &mut Ledger, data: &PathBuf) {
     for (i, x) in records.enumerate() {
         let x: PayPalRow =
             x.unwrap_or_else(|e| panic!("Could not deserialize entry on entry {}!\nHave you done the necessary preprocessing for PayPal exported data?\n{}", i, e));
-        let amount = num::BigRational::from_float(x.amount)
-            .unwrap_or_else(|| panic!("Could not parse payout amount on entry {}!", i));
+        let mut amount = currency::Currency::from_str(&x.amount)
+            .unwrap_or_else(|e| panic!("Could not parse payout amount on entry {}!\n{}", i, e));
         let date = chrono::Utc
             .datetime_from_str(&format!("{} 00:00", &x.date), "%m/%d/%Y %H:%M")
             .unwrap_or_else(|e| {
@@ -180,6 +182,8 @@ fn payout_paypal(ledger: &mut Ledger, data: &PathBuf) {
                     &x.date, i, e
                 )
             });
+
+        amount.set_symbol('$');
 
         let mut hasher = crypto::sha2::Sha256::new();
         hasher.input_str("PayPal");

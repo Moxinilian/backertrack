@@ -11,22 +11,6 @@ pub fn path_exists_or_panic(input: &str) -> PathBuf {
     path
 }
 
-pub fn display_currency(amount: &num::BigRational) -> String {
-    use num::traits::cast::ToPrimitive;
-    ((amount
-        .numer()
-        .to_f64()
-        .expect("Invalid numerator when displaying currency")
-        * 100.0
-        / amount
-            .denom()
-            .to_f64()
-            .expect("Invalid numerator when displaying currency"))
-    .ceil()
-        / 100.0)
-        .separated_string()
-}
-
 pub trait GetOrDefault<T: Default> {
     fn get_or_default(&'_ mut self, index: usize) -> &'_ T;
     fn get_mut_or_default(&'_ mut self, index: usize) -> &'_ mut T;

@@ -2,11 +2,11 @@ use super::structure::{Account, Ledger, TransactionMetadata};
 use std::path::PathBuf;
 use chrono::{DateTime, Utc};
 
-use num::BigRational;
+use currency::Currency;
 
 #[allow(dead_code)]
 impl Ledger {
-    pub fn new_account(&mut self, name: &str, opening_balance: BigRational, opening_date: DateTime<Utc>) {
+    pub fn new_account(&mut self, name: &str, opening_balance: Currency, opening_date: DateTime<Utc>) {
         for v in &self.accounts {
             if v.name == name {
                 panic!("An account with name `{}` already exists", name);
@@ -42,21 +42,21 @@ impl Ledger {
 
 #[allow(dead_code)]
 impl Account {
-    pub fn current_balance(&self) -> num::BigRational {
+    pub fn current_balance(&self) -> Currency {
         let mut res = self.opening_balance.clone();
 
         for t in &self.transactions {
             match t.meta {
                 TransactionMetadata::Income { .. } => {
-                    res += &t.amount;
+                    res = res + &t.amount;
                 }
                 TransactionMetadata::Expense { .. } => {
-                    res -= &t.amount;
+                    res = res + &t.amount;
                 }
             }
 
             for f in &t.fees {
-                res -= &f.amount;
+                res = res + &f.amount;
             }
         }
 
@@ -68,7 +68,7 @@ impl Account {
     }
 }
 
-pub fn new(ledger_path: PathBuf, name: &str, opening_balance: BigRational, opening_date: DateTime<Utc>) {
+pub fn new(ledger_path: PathBuf, name: &str, opening_balance: Currency, opening_date: DateTime<Utc>) {
     let mut ledger = Ledger::load(&ledger_path).expect("Could not open the ledger");
 
     ledger.new_account(name, opening_balance, opening_date);

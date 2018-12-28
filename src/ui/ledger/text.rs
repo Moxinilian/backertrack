@@ -59,8 +59,8 @@ pub fn generate_info_text(tab: &mut LedgerTab) {
         tab.info_text.push(Text::raw(format!(
             "   Account name: {}\n   Opening balance: ${}\n   Current balance: ${}\n\n\n",
             account.name,
-            display_currency(&account.opening_balance),
-            display_currency(&account.current_balance())
+            &account.opening_balance.to_string(),
+            &account.current_balance().to_string(),
         )));
 
         if tab.active_list == LedgerList::Transactions {
@@ -90,8 +90,8 @@ pub fn generate_info_text(tab: &mut LedgerTab) {
                 txn_name,
                 txn.description,
                 txn.date.date(),
-                display_currency(&txn.amount),
-                display_currency(&txn.fees.iter().map(|x| &x.amount).sum())
+                &txn.amount.to_string(),
+                &txn.fees.iter().map(|x| &x.amount).sum().to_string(),
             )));
 
             if let TransactionMetadata::Income {
@@ -129,12 +129,12 @@ pub fn generate_transaction_names(ledger: &Ledger) -> Vec<Vec<String>> {
                         kind: IncomeKind::Donation(_),
                         ref from,
                         ..
-                    } => format!("Donation from {} (${})", from, display_currency(&x.amount)),
+                    } => format!("Donation from {} (${})", from, &x.amount.to_string()),
                     TransactionMetadata::Income {
                         kind: IncomeKind::General,
                         ref from,
                         ..
-                    } => format!("Income from {} (${})", from, display_currency(&x.amount)),
+                    } => format!("Income from {} (${})", from, &x.amount.to_string()),
                     TransactionMetadata::Expense {
                         kind: ExpenseKind::General,
                         ref towards,
@@ -143,7 +143,7 @@ pub fn generate_transaction_names(ledger: &Ledger) -> Vec<Vec<String>> {
                         "Expense requested by {} paid to {} (${})",
                         requester,
                         towards,
-                        display_currency(&x.amount)
+                        &x.amount.to_string(),
                     ),
                     TransactionMetadata::Expense {
                         kind: ExpenseKind::Payout(_),
@@ -152,7 +152,7 @@ pub fn generate_transaction_names(ledger: &Ledger) -> Vec<Vec<String>> {
                     } => format!(
                         "Payout to {} (${})",
                         towards,
-                        display_currency(&x.amount)
+                        &x.amount.to_string(),
                     ),
                 })
                 .collect()

@@ -129,13 +129,11 @@ pub fn event(tab: &mut LedgerTab, event: Event<Key>) -> Trans {
                             &tab.text_input_fields.get_or_default(0),
                             crate::DATE_FORMAT,
                         ) {
-                            if let Ok(amount) = tab
+                            if let Ok(mut amount) = currency::Currency::from_str(&tab
                                 .text_input_fields
                                 .get(2)
-                                .expect("Unreachable: new_txn amount")
-                                .parse::<f64>()
-                            {
-                                if let Some(amount) = num::BigRational::from_float(amount) {
+                                .expect("Unreachable: new_txn amount")) {
+                                    amount.set_symbol('$');
                                     if let Some(fees) = parse_fees(
                                         tab.text_input_fields
                                             .get(3)
@@ -228,7 +226,7 @@ pub fn event(tab: &mut LedgerTab, event: Event<Key>) -> Trans {
                                             generate_help_text(tab);
                                         }
                                     }
-                                }
+                                
                             }
                         }
                     }
@@ -262,8 +260,8 @@ fn parse_fees(fees_str: &str) -> Option<Vec<ledger::Fee>> {
         if x.trim() != "" {
             if let Some(c) = FEES_REGEX.captures(x) {
                 if let Some(amount) = c.get(1) {
-                    if let Ok(amount) = amount.as_str().parse::<f64>() {
-                        if let Some(amount) = num::BigRational::from_float(amount) {
+                    if let Ok(mut amount) = currency::Currency::from_str(amount.as_str()) {
+                            amount.set_symbol('$');
                             if let Some(towards) = c.get(2) {
                                 fees.push(ledger::Fee {
                                     amount,
@@ -272,9 +270,6 @@ fn parse_fees(fees_str: &str) -> Option<Vec<ledger::Fee>> {
                             } else {
                                 return None;
                             }
-                        } else {
-                            return None;
-                        }
                     } else {
                         return None;
                     }
