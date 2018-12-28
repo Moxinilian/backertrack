@@ -4,29 +4,29 @@ use crypto::digest::Digest;
 use serde_derive::Deserialize;
 use std::path::PathBuf;
 
-pub enum Origin {
+pub enum DonationOrigin {
     Unknown,
     DonorBox,
     OpenCollective,
 }
 
-impl From<&str> for Origin {
+impl From<&str> for DonationOrigin {
     fn from(from: &str) -> Self {
         match from {
-            "donorbox" => Origin::DonorBox,
-            "opencollective" => Origin::OpenCollective,
-            _ => Origin::Unknown,
+            "donorbox" => DonationOrigin::DonorBox,
+            "opencollective" => DonationOrigin::OpenCollective,
+            _ => DonationOrigin::Unknown,
         }
     }
 }
 
-pub fn import(ledger_path: PathBuf, data: PathBuf, origin: Origin) {
+pub fn import(ledger_path: PathBuf, data: PathBuf, origin: DonationOrigin) {
     let mut ledger = Ledger::load(&ledger_path).expect("Could not read the ledger file");
 
     match origin {
-        Origin::DonorBox => import_donorbox(&mut ledger, &data),
-        Origin::OpenCollective => import_opencollective(&mut ledger, &data),
-        Origin::Unknown => println!("Unknown origin"),
+        DonationOrigin::DonorBox => import_donorbox(&mut ledger, &data),
+        DonationOrigin::OpenCollective => import_opencollective(&mut ledger, &data),
+        DonationOrigin::Unknown => println!("Unknown origin"),
     }
 
     ledger
@@ -54,8 +54,8 @@ struct OpenCollectiveRow {
 
 fn import_opencollective(ledger: &mut Ledger, data: &PathBuf) {
     let account = ledger
-        .get_account("OpenCollective")
-        .expect("Account for OpenCollective not found");
+        .get_account_mut("Stripe")
+        .expect("Account for Stripe not found");
 
     let known_donations: Vec<DonationID> = account
         .transactions
@@ -157,16 +157,23 @@ struct DonorBoxRow {
     net_amount: String,
     #[serde(rename = "Receipt Id")]
     receipt: String,
+    #[serde(rename = "Donation Type")]
+    processor: String,
 }
 
 fn import_donorbox(ledger: &mut Ledger, data: &PathBuf) {
-    let account = ledger
-        .get_account("DonorBox")
-        .expect("Account for DonorBox not found");
+    let stripe = ledger
+        .get_account("Stripe")
+        .expect("Account for Stripe not found");
 
-    let known_donations: Vec<DonationID> = account
+    let paypal = ledger
+        .get_account("PayPal")
+        .expect("Account for PayPal not found");
+
+    let known_donations: Vec<DonationID> = stripe
         .transactions
         .iter()
+        .chain(&paypal.transactions)
         .filter_map(|x| match &x.meta {
             TransactionMetadata::Income {
                 kind: IncomeKind::Donation(x),
@@ -177,7 +184,8 @@ fn import_donorbox(ledger: &mut Ledger, data: &PathBuf) {
         .map(Clone::clone)
         .collect();
 
-    let mut donations: Vec<Transaction> = Vec::new();
+    let mut donations_stripe: Vec<Transaction> = Vec::new();
+    let mut donations_paypal: Vec<Transaction> = Vec::new();
 
     let mut reader = csv::Reader::from_path(data).expect("Could not read the CSV file");
 
@@ -190,7 +198,7 @@ fn import_donorbox(ledger: &mut Ledger, data: &PathBuf) {
         let fee = num::BigRational::from_float(x.fee)
             .unwrap_or_else(|| panic!("Could not parse host fee on entry {}!", i));
         let date = chrono::Utc
-            .datetime_from_str(&x.date.trim_right_matches(" UTC"), "%Y-%m-%d %H:%M:%S")
+            .datetime_from_str(&x.date.trim_end_matches(" UTC"), "%Y-%m-%d %H:%M:%S")
             .unwrap_or_else(|e| panic!("Could not parse transaction date on entry {}!\n{}", i, e));
 
         let mut hasher = crypto::sha2::Sha256::new();
@@ -209,18 +217,33 @@ fn import_donorbox(ledger: &mut Ledger, data: &PathBuf) {
                 from: x.name.to_owned(),
             };
 
-            donations.push(Transaction {
-                amount,
-                date,
-                meta,
-                description: "Donation made through the DonorBox platform".to_owned(),
-                fees: vec![
-                    Fee {
-                        amount: fee,
-                        towards: "DonorBox Processing".to_owned(),
-                    },
-                ],
-            });
+            match x.processor.as_ref() {
+                "stripe" => {
+                    donations_stripe.push(Transaction {
+                        amount,
+                        date,
+                        meta,
+                        description: "Donation made through the DonorBox platform".to_owned(),
+                        fees: vec![Fee {
+                            amount: fee,
+                            towards: "DonorBox Processing".to_owned(),
+                        }],
+                    });
+                }
+                "paypal" | "paypal_express" => {
+                    donations_paypal.push(Transaction {
+                        amount,
+                        date,
+                        meta,
+                        description: "Donation made through the DonorBox platform".to_owned(),
+                        fees: vec![Fee {
+                            amount: fee,
+                            towards: "DonorBox Processing".to_owned(),
+                        }],
+                    });
+                }
+                mtd => println!("WARNING: Unknown donation method `{}` for donation from `{}` on {} (entry {}).", mtd, x.name, x.date, i),
+            }
         } else {
             println!(
                 "WARNING: Donation from `{}` on {} (entry {}) is already in the ledger.",
@@ -229,6 +252,17 @@ fn import_donorbox(ledger: &mut Ledger, data: &PathBuf) {
         }
     }
 
-    donations.sort_by(|x, y| x.date.cmp(&y.date));
-    account.transactions.append(&mut donations);
+    donations_stripe.sort_by(|x, y| x.date.cmp(&y.date));
+    ledger
+        .get_account_mut("Stripe")
+        .expect("Account for Stripe not found")
+        .transactions
+        .append(&mut donations_stripe);
+
+    donations_paypal.sort_by(|x, y| x.date.cmp(&y.date));
+    ledger
+        .get_account_mut("PayPal")
+        .expect("Account for PayPal not found")
+        .transactions
+        .append(&mut donations_paypal);
 }

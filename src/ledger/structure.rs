@@ -7,6 +7,7 @@ use std::path::Path;
 use std::fs;
 
 pub type DonationID = Vec<u8>;
+pub type PayoutID = Vec<u8>;
 
 #[derive(Serialize, Deserialize)]
 pub struct Fee {
@@ -23,6 +24,7 @@ pub enum IncomeKind {
 #[derive(Serialize, Deserialize, PartialEq, Eq)]
 pub enum ExpenseKind {
     General,
+    Payout(PayoutID),
 }
 
 #[derive(Serialize, Deserialize)]

@@ -35,6 +35,7 @@ pub enum NewTransactionKind {
     GeneralIncome = 0,
     GeneralExpense = 1,
     DonationIncome = 2,
+    PayoutExpense = 3,
 }
 
 pub struct LedgerTab<'a> {

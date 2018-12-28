@@ -40,6 +40,15 @@ pub const FIELDS_KIND: &'static [&'static [&'static str]] = &[
         "From",
         "Donation ID",
     ],
+    &[
+        "UTC date (YYYY/MM/DD HH:MM)",
+        "Description",
+        "Amount",
+        "Fees",
+        "Towards",
+        "Requester",
+        "Payout ID",
+    ],
 ];
 
 impl NewTransactionKind {
@@ -48,6 +57,7 @@ impl NewTransactionKind {
             NewTransactionKind::DonationIncome => "Donation",
             NewTransactionKind::GeneralExpense => "Expense",
             NewTransactionKind::GeneralIncome => "Income",
+            NewTransactionKind::PayoutExpense => "Payout Expense",
         }
     }
 }
@@ -160,7 +170,7 @@ pub fn event(tab: &mut LedgerTab, event: Event<Key>) -> Trans {
                                             NewTransactionKind::DonationIncome => hex::decode(
                                                 tab.text_input_fields
                                                     .get(5)
-                                                    .expect("Unreachable: new_txn from general"),
+                                                    .expect("Unreachable: new_txn donation id"),
                                             )
                                             .ok()
                                             .map(|x| ledger::TransactionMetadata::Income {
@@ -171,6 +181,25 @@ pub fn event(tab: &mut LedgerTab, event: Event<Key>) -> Trans {
                                                     .expect("Unreachable: new_txn from donation")
                                                     .to_owned(),
                                             }),
+                                            NewTransactionKind::PayoutExpense => hex::decode(
+                                                tab.text_input_fields
+                                                    .get(6)
+                                                    .expect("Unreachable: new_txn payout id"),
+                                            )
+                                            .ok()
+                                            .map(|x| ledger::TransactionMetadata::Expense {
+                                                    kind: ledger::ExpenseKind::Payout(x),
+                                                    towards: tab
+                                                        .text_input_fields
+                                                        .get(4)
+                                                        .expect("Unreachable: new_txn towards payout")
+                                                        .to_owned(),
+                                                    requester: tab
+                                                        .text_input_fields
+                                                        .get(5)
+                                                        .expect("Unreachable: new_txn requester payout")
+                                                        .to_owned(),
+                                                })
                                         } {
                                             let account = tab
                                                 .ledger

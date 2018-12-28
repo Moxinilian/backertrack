@@ -103,6 +103,15 @@ pub fn generate_info_text(tab: &mut LedgerTab) {
                     "   Donation ID: {}\n",
                     hex::encode(uuid)
                 )));
+            } else if let TransactionMetadata::Expense {
+                kind: ExpenseKind::Payout(ref uuid),
+                ..
+            } = &txn.meta
+            {
+                tab.info_text.push(Text::raw(format!(
+                    "   Payout ID: {}\n",
+                    hex::encode(uuid)
+                )));
             }
         }
     }
@@ -133,6 +142,15 @@ pub fn generate_transaction_names(ledger: &Ledger) -> Vec<Vec<String>> {
                     } => format!(
                         "Expense requested by {} paid to {} (${})",
                         requester,
+                        towards,
+                        display_currency(&x.amount)
+                    ),
+                    TransactionMetadata::Expense {
+                        kind: ExpenseKind::Payout(_),
+                        ref towards,
+                        ..
+                    } => format!(
+                        "Payout to {} (${})",
                         towards,
                         display_currency(&x.amount)
                     ),

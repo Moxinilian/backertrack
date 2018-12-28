@@ -1,14 +1,26 @@
+use chrono::{TimeZone, Utc};
 use clap::{App, AppSettings, Arg, SubCommand};
 use num::{BigInt, BigRational};
-use chrono::{Utc, TimeZone};
 
 use std::path::PathBuf;
 
 pub const DATE_FORMAT: &'static str = "%Y/%m/%d %H:%M";
 
 mod ledger;
-mod ui;
 mod utils;
+
+#[cfg(unix)]
+mod ui;
+
+#[cfg(windows)]
+mod ui {
+    pub fn start_handle_panic(
+        _: Option<std::path::PathBuf>,
+    ) -> Result<(), Box<dyn std::error::Error>> {
+        println!("backertrack UI is only supported on Unix systems.");
+        Ok(())
+    }
+}
 
 use crate::utils::path_exists_or_panic;
 
@@ -85,11 +97,7 @@ fn main() -> Result<(), Box<std::error::Error>> {
                                 .required(true)
                                 .help("Name of the new account"),
                         )
-                        .arg(
-                            Arg::with_name("DATE")
-                                .required(false)
-                                .help("Opening ")
-                        )
+                        .arg(Arg::with_name("DATE").required(true).help("Date the account was opened (YYYY/MM/DD HH:MM)"))
                         .arg(
                             Arg::with_name("balance")
                                 .long("balance")
@@ -153,13 +161,19 @@ fn main() -> Result<(), Box<std::error::Error>> {
                         .map(std::str::FromStr::from_str)
                         .and_then(Result::ok)
                         .unwrap_or_else(|| BigRational::from_integer(BigInt::from(0))),
-                    new_match.value_of("date").and_then(|x| Utc.datetime_from_str(x, DATE_FORMAT).ok()).expect("Invalid opening date, expected format: YYYY/MM/DD HH:MM"),
+                    new_match
+                        .value_of("DATE")
+                        .and_then(|x| Utc.datetime_from_str(x, DATE_FORMAT).ok())
+                        .expect("Invalid opening date, expected format: YYYY/MM/DD HH:MM"),
                 );
             }
         } else if let Some(new_match) = ledger_match.subcommand_matches("new") {
             ledger::new(PathBuf::from(new_match.value_of("LEDGER").unwrap()));
         } else if let Some(export_match) = ledger_match.subcommand_matches("export") {
-            ledger::export(PathBuf::from(export_match.value_of("LEDGER").unwrap()), PathBuf::from(export_match.value_of("OUTPUT").unwrap()));
+            ledger::export(
+                PathBuf::from(export_match.value_of("LEDGER").unwrap()),
+                PathBuf::from(export_match.value_of("OUTPUT").unwrap()),
+            );
         }
     } else {
         let ledger = matches.value_of("ledger").map(PathBuf::from);

@@ -12,7 +12,8 @@ This utility helps managing the treasury paperwork of the Amethyst Foundation.
 Currently, its only purpose is to keep a ledger of all transactions and automate the processing of donations.  
 It can also output documents required by tax authorities.
 
-**NOTE: This tool only works on Linux and macOS for now.**
+**NOTE: The command line graphical interface only works on Linux and macOS for now.**  
+You can still use the traditional command line on Windows.
 
 ## Installation
 

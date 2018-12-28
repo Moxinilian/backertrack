@@ -4,6 +4,7 @@ use chrono::{DateTime, Utc};
 
 use num::BigRational;
 
+#[allow(dead_code)]
 impl Ledger {
     pub fn new_account(&mut self, name: &str, opening_balance: BigRational, opening_date: DateTime<Utc>) {
         for v in &self.accounts {
@@ -20,7 +21,11 @@ impl Ledger {
         });
     }
 
-    pub fn get_account(&mut self, name: &str) -> Option<&mut Account> {
+    pub fn get_account(&self, name: &str) -> Option<&Account> {
+        self.accounts.iter().position(|x| x.name == name).and_then(move |x| self.accounts.get(x))
+    }
+
+    pub fn get_account_mut(&mut self, name: &str) -> Option<&mut Account> {
         self.accounts.iter().position(|x| x.name == name).and_then(move |x| self.accounts.get_mut(x))
     }
 
@@ -35,6 +40,7 @@ impl Ledger {
     }
 }
 
+#[allow(dead_code)]
 impl Account {
     pub fn current_balance(&self) -> num::BigRational {
         let mut res = self.opening_balance.clone();

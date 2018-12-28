@@ -48,6 +48,22 @@ pub fn export(ledger: PathBuf, to: PathBuf) {
                         paid_by: "",
                     }).expect("Failed to serialize general expense");
                 }
+                TransactionMetadata::Expense {
+                    kind: ExpenseKind::Payout(_),
+                    ref towards,
+                    ..
+                } => {
+                    writer.serialize(ExportRow {
+                        account: &account.name,
+                        kind: "Payout",
+                        amount: &format!("${}", display_currency(&transaction.amount)),
+                        date: &transaction.date.to_rfc3339(),
+                        fees: &format_fees(&transaction.fees),
+                        description: &transaction.description,
+                        paid_to: towards,
+                        paid_by: "",
+                    }).expect("Failed to serialize payout expense");
+                }
                 TransactionMetadata::Income {
                     kind: IncomeKind::General,
                     ref from,
