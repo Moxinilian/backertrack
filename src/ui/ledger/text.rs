@@ -1,8 +1,5 @@
 use super::{LedgerList, LedgerTab, LedgerTabState};
-use crate::{
-    ledger::{ExpenseKind, IncomeKind, Ledger, TransactionMetadata},
-    utils::display_currency,
-};
+use crate::ledger::{ExpenseKind, IncomeKind, Ledger, TransactionMetadata};
 use tui::{
     style::{Color, Modifier, Style},
     widgets::Text,
@@ -85,13 +82,15 @@ pub fn generate_info_text(tab: &mut LedgerTab) {
                 .expect("Unreachable: txn_name 1")
                 .get(txn_cursor)
                 .expect("Unreachable: txn_name 2");
+
+            let fees: currency::Currency = &txn.fees.iter().map(|x| &x.amount).sum();
             tab.info_text.push(Text::raw(format!(
                 "   {}\n   {}\n   Date: {}\n   Gross amount: ${}\n   Fees: ${}\n",
                 txn_name,
                 txn.description,
                 txn.date.date(),
                 &txn.amount.to_string(),
-                &txn.fees.iter().map(|x| &x.amount).sum().to_string(),
+                fees.to_string(),
             )));
 
             if let TransactionMetadata::Income {
