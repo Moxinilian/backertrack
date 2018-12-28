@@ -89,7 +89,7 @@ pub fn generate_info_text(tab: &mut LedgerTab) {
             }
             
             tab.info_text.push(Text::raw(format!(
-                "   {}\n   {}\n   Date: {}\n   Gross amount: ${}\n   Fees: ${}\n",
+                "   {}\n   {}\n   Date: {}\n   Gross amount: {}\n   Fees: {}\n",
                 txn_name,
                 txn.description,
                 txn.date.date(),
