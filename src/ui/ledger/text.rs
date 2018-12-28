@@ -54,7 +54,7 @@ pub fn generate_info_text(tab: &mut LedgerTab) {
             .get(tab.account_cursor)
             .expect("Unreachable: account cursor out of bounds for info text");
         tab.info_text.push(Text::raw(format!(
-            "   Account name: {}\n   Opening balance: ${}\n   Current balance: ${}\n\n\n",
+            "   Account name: {}\n   Opening balance: {}\n   Current balance: {}\n\n\n",
             account.name,
             &account.opening_balance.to_string(),
             &account.current_balance().to_string(),
