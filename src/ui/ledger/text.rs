@@ -83,7 +83,7 @@ pub fn generate_info_text(tab: &mut LedgerTab) {
                 .get(txn_cursor)
                 .expect("Unreachable: txn_name 2");
 
-            let fees = currency::Currency::from(0, '$');
+            let mut fees = currency::Currency::from(0, '$');
             for x in &txn.fees {
                 fees = fees + &x.amount;
             }
