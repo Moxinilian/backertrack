@@ -1,6 +1,5 @@
 use serde_derive::{Serialize, Deserialize};
 use chrono::{DateTime, Utc};
-use num::BigRational;
 use currency::Currency;
 
 use std::error::Error;

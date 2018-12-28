@@ -1,4 +1,3 @@
-use separator::Separatable;
 use std::path::PathBuf;
 
 pub fn path_exists_or_panic(input: &str) -> PathBuf {
