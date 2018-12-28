@@ -132,18 +132,18 @@ pub fn generate_transaction_names(ledger: &Ledger) -> Vec<Vec<String>> {
                         kind: IncomeKind::Donation(_),
                         ref from,
                         ..
-                    } => format!("Donation from {} (${})", from, &x.amount.to_string()),
+                    } => format!("Donation from {} ({})", from, &x.amount.to_string()),
                     TransactionMetadata::Income {
                         kind: IncomeKind::General,
                         ref from,
                         ..
-                    } => format!("Income from {} (${})", from, &x.amount.to_string()),
+                    } => format!("Income from {} ({})", from, &x.amount.to_string()),
                     TransactionMetadata::Expense {
                         kind: ExpenseKind::General,
                         ref towards,
                         ref requester,
                     } => format!(
-                        "Expense requested by {} paid to {} (${})",
+                        "Expense requested by {} paid to {} ({})",
                         requester,
                         towards,
                         &x.amount.to_string(),
@@ -153,7 +153,7 @@ pub fn generate_transaction_names(ledger: &Ledger) -> Vec<Vec<String>> {
                         ref towards,
                         ..
                     } => format!(
-                        "Payout to {} (${})",
+                        "Payout to {} ({})",
                         towards,
                         &x.amount.to_string(),
                     ),

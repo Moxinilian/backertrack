@@ -51,12 +51,12 @@ impl Account {
                     res = res + &t.amount;
                 }
                 TransactionMetadata::Expense { .. } => {
-                    res = res + &t.amount;
+                    res = res - &t.amount;
                 }
             }
 
             for f in &t.fees {
-                res = res + &f.amount;
+                res = res - &f.amount;
             }
         }
 
