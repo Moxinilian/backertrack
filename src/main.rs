@@ -53,6 +53,21 @@ fn main() -> Result<(), Box<std::error::Error>> {
                 ),
         )
         .subcommand(
+            SubCommand::with_name("info")
+                .about("Gather various information regarding accounts")
+                .setting(AppSettings::ArgRequiredElseHelp)
+                .arg(
+                    Arg::with_name("LEDGER")
+                        .required(true)
+                        .help("Path where the ledger lives"),
+                )
+                .arg(
+                    Arg::with_name("ACCOUNTS")
+                        .required(true)
+                        .help("Accounts to get info from (account1,account2,...)"),
+                ),
+        )
+        .subcommand(
             SubCommand::with_name("payout")
                 .about("Import new payouts to Chase into the ledger")
                 .setting(AppSettings::ArgRequiredElseHelp)
@@ -197,6 +212,11 @@ fn main() -> Result<(), Box<std::error::Error>> {
             ledger::export(
                 PathBuf::from(export_match.value_of("LEDGER").unwrap()),
                 PathBuf::from(export_match.value_of("OUTPUT").unwrap()),
+            );
+        } else if let Some(info_match) = ledger_match.subcommand_matches("info") {
+            ledger::info(
+                PathBuf::from(info_match.value_of("LEDGER").unwrap()),
+                info_match.value_of("ACCOUNTS").unwrap(),
             );
         } else if let Some(payout_match) = ledger_match.subcommand_matches("payout") {
             ledger::payout::payout(
