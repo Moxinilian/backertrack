@@ -24,9 +24,10 @@ Therefore, you will have to build it yourself, which is fortunately very easy wi
 $ git clone https://github.com/Moxinilian/backertrack.git
 $ cd backertrack
 $ cargo build --release
+$ ./target/release/backertrack [commands]
 ```
 
-You can grab the output executable in your `target` folder.
+You can also grab the output executable in your `target/release` folder.
 
 Alternatively, you can use `backertrack` directly with `cargo run`:
 
@@ -42,7 +43,7 @@ $ cargo run --release -- [commands]
 To consult the documentation, run:
 
 ```
-$ backetrack --help
+$ backertrack --help
 ```
 
 You can also use the command line UI by running:
