@@ -1,0 +1,11 @@
+[package]
+name = "backertrack-client"
+version = "0.1.0"
+authors = ["Théo Degioanni <moxinilian@tutanota.com>"]
+edition = "2018"
+
+[dependencies]
+yew = "0.5.0"
+jsonwebtoken = "5.0.1"
+serde = "1.0.88"
+serde_derive = "1.0.88"
