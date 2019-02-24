@@ -1,5 +1,7 @@
 import { Elm } from './Main.elm'
+import domready from 'domready'
 
-Elm.Main.init({
-    node: document.querySelector('body')
+domready(() => {
+    const node = document.querySelector('body')
+    Elm.Main.init({ node })
 })
