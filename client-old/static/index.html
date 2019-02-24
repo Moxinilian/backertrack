@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>backertrack</title>
+</head>
+
+<body>
+    <script src="/assets/js/fallback.min.js"></script>
+    <script>
+        fallback.load({
+            bulma: {
+                urls: [
+                    'https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.4/css/bulma.min.css',
+                    '/assets/css/bulma.min.css'
+                ],
+                integrity: 'sha384-l9M6Adwf4b8uYw86eNILi6yzN7Zf4VoTPpB88nLLXbZ11ybFDaLcd/a2MU1EZXyK',
+                crossorigin: 'anonymous',
+            },
+            FontAwesome: {
+                urls: [
+                    'https://use.fontawesome.com/releases/v5.7.2/js/all.js',
+                    '/assets/js/fontawesome.all.min.js',
+                ],
+                integrity: 'sha384-0pzryjIRos8mFBWMzSSZApWtPl/5++eIfzYmTgBBmXYdhvxPc+XcFEk+zJwDgWbP',
+                crossorigin: 'anonymous',
+            },
+            Elm: '/app.js',
+            main_css: '/assets/css/main.css',
+        })
+
+        fallback.ready(function () {
+            Elm.Main.init()
+        })
+    </script>
+</body>
+
+</html>

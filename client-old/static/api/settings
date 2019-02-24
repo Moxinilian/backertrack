@@ -1,0 +1,8 @@
+{
+    "defaultPermissions": {
+        "readAccounts": true,
+        "readTransactions": true,
+        "manageTeams": [],
+        "admin": false
+    }
+}

@@ -1,0 +1,2 @@
+#!/bin/bash
+parcel src/index.html
