@@ -15,13 +15,23 @@ import Url
 
 
 type alias Model =
-    { key : Nav.Key
+    { apiServer : String
+    , key : Nav.Key
     , currentCategory : Category
-    , ledgerState : LedgerPage
+    , pages : PageStates
     , panic : Panic
     , auth : Maybe AuthLevel
     , settings : Maybe SettingsData
     }
+
+
+type alias PageStates =
+    { ledgerState : LedgerState }
+
+
+defaultPageStates : PageStates
+defaultPageStates =
+    PageStates defaultLedgerPage
 
 
 type alias SettingsData =
@@ -43,7 +53,7 @@ type Msg
     | ObtainedSettings (Result Http.Error SettingsData)
 
 
-main : Program () Model Msg
+main : Program D.Value Model Msg
 main =
     Browser.application
         { init = init
@@ -55,15 +65,34 @@ main =
         }
 
 
-init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
-init flags url key =
-    ( Model key Ledger NewAccount None Nothing Nothing, fetchSettings )
+type alias JavaScriptFlags =
+    { apiServer : String
+    }
 
 
-fetchSettings : Cmd Msg
-fetchSettings =
+flagsDecoder : D.Decoder JavaScriptFlags
+flagsDecoder =
+    D.map JavaScriptFlags (D.field "apiServer" D.string)
+
+
+init : D.Value -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
+init flagsRaw url key =
+    case D.decodeValue flagsDecoder flagsRaw of
+        Err _ ->
+            ( Model "" key Home defaultPageStates (Reason "Invalid JavaScript flags") Nothing Nothing, Cmd.none )
+
+        Ok flags ->
+            let
+                model =
+                    Model flags.apiServer key Ledger defaultPageStates None Nothing Nothing
+            in
+            ( model, fetchSettings model.apiServer )
+
+
+fetchSettings : String -> Cmd Msg
+fetchSettings server =
     Http.get
-        { url = "/api/settings"
+        { url = server ++ "/settings.json"
         , expect = Http.expectJson ObtainedSettings jsonToSettings
         }
 
@@ -89,11 +118,21 @@ update msg model =
 
         ObtainedSettings res ->
             case res of
-                Err _ ->
-                    ( { model | panic = Reason "Could not fetch basic settings" }, Cmd.none )
+                Err e ->
+                    ( { model | panic = Reason ("Could not fetch basic settings at " ++ model.apiServer ++ "/settings.json, " ++ Debug.toString e) }, Cmd.none )
 
                 Ok data ->
-                    ( { model | settings = Just data, auth = Just (AuthLevel "Anonymous" data.defaultPermissions False) }, Cmd.none )
+                    refreshGeneralData (updateSettings model data)
+
+
+updateSettings : Model -> SettingsData -> Model
+updateSettings model data =
+    { model | settings = Just data, auth = Just (Maybe.withDefault (AuthLevel "Anonymous" data.defaultPermissions False) model.auth) }
+
+
+refreshGeneralData : Model -> ( Model, Cmd Msg )
+refreshGeneralData model =
+    ( model, Cmd.none )
 
 
 subscriptions : Model -> Sub Msg
@@ -107,14 +146,14 @@ view model =
     , body =
         if model.panic == None then
             if model.settings == Nothing then
-                loadingView
+                [ loadingView ]
 
             else
                 [ navbarView model
                 , div [ class "container" ]
                     [ case model.currentCategory of
                         Ledger ->
-                            ledgerView model.ledgerState
+                            ledgerView model.pages.ledgerState
 
                         _ ->
                             div [] [ text "Content" ]
